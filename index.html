@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atlantic Edge | SwellShift Demo</title>
+<style>
+:root{--navy:#075985;--sea:#0f9d8a;--foam:#e8f7f3;--ink:#12364a;--muted:#56727c;--red:#b42318;--amber:#8a5a00;--line:#cfe3e5}
+*{box-sizing:border-box}body{margin:0;background:#f0f8fb;color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}header{background:var(--navy);color:white;padding:18px 16px 14px}header .top{max-width:1000px;margin:auto;display:flex;justify-content:space-between;gap:12px;align-items:center}h1{font-size:1.25rem;margin:0}header p{margin:4px 0 0;color:#d9f3f4;font-size:.9rem}.sample{font-size:.75rem;background:#ffedb5;color:#513b00;padding:6px 9px;border-radius:999px;font-weight:800;white-space:nowrap}.wrap{max-width:1000px;margin:auto;padding:16px}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.tab,button{border:0;border-radius:12px;min-height:48px;padding:12px 14px;font:inherit;font-weight:750;cursor:pointer}.tab{background:#dff1f5;color:var(--navy)}.tab.active{background:var(--sea);color:white}button:focus-visible,.tab:focus-visible{outline:3px solid #f6bd60;outline-offset:2px}.primary{background:var(--sea);color:white}.secondary{background:#dff4ef;color:var(--navy)}.danger{background:#ffebe9;color:var(--red)}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #0759850d}.panel h2{margin:0 0 5px;font-size:1.15rem}.muted{color:var(--muted);font-size:.9rem}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.stat{background:var(--foam);border-radius:12px;padding:12px}.stat strong{display:block;font-size:1.35rem}.stat span{font-size:.78rem;color:var(--muted)}.session,.booking{border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:10px}.session-head,.booking-head{display:flex;justify-content:space-between;gap:10px;align-items:start}.pill{font-size:.75rem;border-radius:999px;padding:4px 8px;font-weight:800;background:#d9f5e9;color:#075b48}.pill.red{background:#ffebe9;color:var(--red)}.pill.amber{background:#fff4d6;color:var(--amber)}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.actions button{flex:1;min-width:130px}.small{font-size:.83rem}.hidden{display:none}.risk{color:var(--red)}.selectrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}.selectrow select{min-height:48px;padding:8px;border:1px solid var(--line);border-radius:10px;flex:1;min-width:170px;font:inherit}footer{text-align:center;padding:8px 16px 28px;color:var(--muted);font-size:.8rem}@media(min-width:700px){.session-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.booking-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}}@media(max-width:420px){.wrap{padding:10px}.panel{padding:12px}.tab{padding:10px 4px;font-size:.9rem}.stats{gap:5px}.stat{padding:9px}.stat strong{font-size:1.1rem}}
+</style>
+</head>
+<body>
+<header><div class="top"><div><h1>Atlantic Edge Surf School</h1><p>SwellShift · Weather rebooking alpha</p></div><span class="sample">SAMPLE DATA</span></div></header>
+<main class="wrap">
+<div class="tabs" role="tablist" aria-label="App views">
+<button class="tab active" data-view="today" role="tab" aria-selected="true">Today</button>
+<button class="tab" data-view="rebook" role="tab" aria-selected="false">Rebook</button>
+<button class="tab" data-view="money" role="tab" aria-selected="false">Money</button>
+</div>
+<section id="today" class="view">
+<div class="panel"><h2>Today's sessions</h2><p class="muted">Cancel a session to move every booking on it into Rebook. Large controls are designed for phone use.</p><div id="sessions" class="session-grid"></div></div>
+</section>
+<section id="rebook" class="view hidden">
+<div class="panel"><h2>Bookings to rebook</h2><p class="muted">Choose one of the next three sessions with enough free places, then move the booking with one tap.</p><div id="bookings" class="booking-grid"></div></div>
+</section>
+<section id="money" class="view hidden">
+<div class="panel"><h2>Money at risk</h2><p class="muted">Illustrative value uses €45 per person, as specified in the case.</p><div id="moneyStats" class="stats"></div><div id="moneyList"></div></div>
+</section>
+<div class="actions"><button class="secondary" id="reset">Reset sample data</button><button class="secondary" id="export">Export sample data (JSON)</button></div>
+<p class="muted small">Demo note: sample data only. Changes save in this browser using localStorage. This alpha does not send messages, take payments, or connect to a live booking system.</p>
+</main><footer>SwellShift concept · Built for assessment demonstration · No real customer data</footer>
+<script>
+const KEY='swellshift-atlantic-edge-v1';
+const initial={
+ sessions:[
+ {id:'S1',date:'Today · 09:00',label:'Beginner lesson',cap:12,bookings:['b1','b2','b3'],cancelled:false},
+ {id:'S2',date:'Today · 11:00',label:'Progression lesson',cap:12,bookings:['b4','b5'],cancelled:false},
+ {id:'S3',date:'Today · 13:00',label:'Beginner lesson',cap:12,bookings:['b6','b7'],cancelled:false},
+ {id:'S4',date:'Today · 15:00',label:'Group lesson',cap:12,bookings:['b8'],cancelled:false},
+ {id:'S5',date:'Tomorrow · 09:00',label:'Beginner lesson',cap:12,bookings:[],cancelled:false},
+ {id:'S6',date:'Tomorrow · 11:00',label:'Progression lesson',cap:12,bookings:[],cancelled:false}
+ ],
+ bookings:[
+ {id:'b1',name:'Aoife Murphy',size:2,contact:'aoife.sample@example.test',session:'S1',status:'booked',created:Date.now()-1000*60*60*6},
+ {id:'b2',name:'Liam Byrne',size:1,contact:'liam.sample@example.test',session:'S1',status:'booked',created:Date.now()-1000*60*60*5},
+ {id:'b3',name:'Nora Kelly',size:3,contact:'nora.sample@example.test',session:'S1',status:'booked',created:Date.now()-1000*60*60*4},
+ {id:'b4',name:'Eoin Walsh',size:2,contact:'eoin.sample@example.test',session:'S2',status:'booked',created:Date.now()-1000*60*60*3},
+ {id:'b5',name:'Mia Doyle',size:1,contact:'mia.sample@example.test',session:'S2',status:'booked',created:Date.now()-1000*60*60*2},
+ {id:'b6',name:'Jack Nolan',size:4,contact:'jack.sample@example.test',session:'S3',status:'booked',created:Date.now()-1000*60*60},
+ {id:'b7',name:'Saoirse Ryan',size:2,contact:'saoirse.sample@example.test',session:'S3',status:'booked',created:Date.now()-1000*60*30},
+ {id:'b8',name:'Finn O’Brien',size:2,contact:'finn.sample@example.test',session:'S4',status:'booked',created:Date.now()-1000*60*15}
+ ]};
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.sessions&&x.bookings)return x}catch(e){}return structuredClone(initial)}
+let state=load();
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function sessionBookings(s){return state.bookings.filter(b=>b.session===s.id&&b.status==='booked')}
+function used(s){return sessionBookings(s).reduce((n,b)=>n+b.size,0)}
+function available(s){return s.cap-used(s)}
+function fmtMoney(n){return new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n)}
+function ageHours(b){return (Date.now()-b.created)/3600000}
+function overdue(b){return b.status==='rebook'&&ageHours(b)>=48}
+function renderSessions(){
+ const el=document.getElementById('sessions');
+ el.innerHTML=state.sessions.map(s=>`<article class="session"><div class="session-head"><div><strong>${esc(s.date)}</strong><div>${esc(s.label)}</div><div class="muted small">${used(s)} of ${s.cap} places booked · ${available(s)} free</div></div><span class="pill ${s.cancelled?'red':''}">${s.cancelled?'Cancelled':'Scheduled'}</span></div>${s.cancelled?'<p class="muted small">Session cancelled. Its bookings are in Rebook.</p>':`<div class="actions"><button class="danger" onclick="cancelSession('${s.id}')">Cancel session</button></div>`}</article>`).join('');
+}
+function optionsFor(b){
+ return state.sessions.filter(s=>!s.cancelled&&s.id!==b.session&&available(s)>=b.size).slice(0,3);
+}
+function renderBookings(){
+ const el=document.getElementById('bookings');
+ const pending=state.bookings.filter(b=>b.status==='rebook');
+ if(!pending.length){el.innerHTML='<p class="muted">No bookings are waiting to be rebooked. Cancel a sample session in Today to try this workflow.</p>';return}
+ el.innerHTML=pending.map(b=>{
+ const opts=optionsFor(b);const late=overdue(b);
+ return `<article class="booking"><div class="booking-head"><div><strong>${esc(b.name)}</strong><div class="muted small">Group size: ${b.size}</div><div class="muted small">${esc(b.contact)}</div></div><span class="pill ${late?'red':'amber'}">${late?'48+ hours · overdue':'Needs rebooking'}</span></div><div class="muted small" style="margin-top:8px">Value at risk: <strong class="risk">${fmtMoney(b.size*45)}</strong></div>${opts.length?`<div class="selectrow"><select id="target-${b.id}" aria-label="Available session for ${esc(b.name)}">${opts.map(s=>`<option value="${s.id}">${esc(s.date)} — ${esc(s.label)} (${available(s)} free)</option>`).join('')}</select><button class="primary" onclick="rebook('${b.id}')">Move booking</button></div>`:'<p class="muted small">No suitable session currently has enough free places.</p>'}</article>`;
+ }).join('');
+}
+function renderMoney(){
+ const pending=state.bookings.filter(b=>b.status==='rebook');
+ const people=pending.reduce((n,b)=>n+b.size,0),value=people*45;
+ document.getElementById('moneyStats').innerHTML=`<div class="stat"><strong>${pending.length}</strong><span>Bookings waiting</span></div><div class="stat"><strong>${people}</strong><span>People to rebook</span></div><div class="stat"><strong>${fmtMoney(value)}</strong><span>Value at risk</span></div>`;
+ document.getElementById('moneyList').innerHTML=pending.length?pending.map(b=>`<div class="session"><strong>${esc(b.name)}</strong><div class="muted small">${b.size} people · ${overdue(b)?'<span class="risk">Over 48 hours</span>':'Awaiting rebooking'}</div><strong class="risk">${fmtMoney(b.size*45)}</strong></div>`).join(''):'<p class="muted">No outstanding bookings. Value at risk is €0.</p>';
+}
+function render(){renderSessions();renderBookings();renderMoney()}
+function cancelSession(id){
+ const s=state.sessions.find(x=>x.id===id);if(!s||s.cancelled)return;
+ if(!confirm(`Cancel ${s.date} ${s.label} and move all its bookings to Rebook?`))return;
+ s.cancelled=true;
+ s.bookings.forEach(id=>{const b=state.bookings.find(x=>x.id===id);if(b&&b.status==='booked'){b.status='rebook';b.session=null;b.created=Date.now()}});
+ save();
+}
+function rebook(id){
+ const b=state.bookings.find(x=>x.id===id),select=document.getElementById('target-'+id);if(!b||!select)return;
+ const s=state.sessions.find(x=>x.id===select.value);if(!s||s.cancelled||available(s)<b.size){alert('That session no longer has enough places. Please choose another.');render();return}
+ b.status='booked';b.session=s.id;s.bookings.push(b.id);save();
+}
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+ document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x===btn);x.setAttribute('aria-selected',x===btn?'true':'false')});
+ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('hidden',v.id!==btn.dataset.view));
+}));
+document.getElementById('reset').addEventListener('click',()=>{if(confirm('Reset all demo changes to the original sample data?')){localStorage.removeItem(KEY);state=load();render()}});
+document.getElementById('export').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='swellshift-sample-data.json';a.click();URL.revokeObjectURL(a.href)});
+render();
+</script></body></html>
